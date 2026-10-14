@@ -1,0 +1,33 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python environments and caches
+.venv/
+.venv-1/
+**/__pycache__/
+**/.pytest_cache/
+*.py[cod]
+
+# Java/Maven build output
+**/target/
+**/.mvn/timing.properties
+
+# Node dependencies and build output
+**/node_modules/
+**/dist/
+**/.vite/
+
+# IDE/editor files
+.idea/
+*.iml
+.vscode/*.log
+
+# Local runtime logs
+.runtime-*.log
+startup-log.txt
+build.log
+
+# Local uploaded/generated data
+scolarmate-backend/data/profile-documents/
