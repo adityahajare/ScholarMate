@@ -1,0 +1,13 @@
+target
+.git
+.idea
+.vscode
+.env
+.env.*
+!.env.example
+data/profile-documents
+ml-service/.venv
+ml-service/.venv-1
+ml-service/__pycache__
+ml-service/.pytest_cache
+*.log

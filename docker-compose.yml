@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-scholarmate_db}
+      POSTGRES_USER: ${SCHOLARMATE_DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${SCHOLARMATE_DB_PASSWORD:?Set SCHOLARMATE_DB_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ml-service:
+    build:
+      context: ./scolarmate-backend/ml-service
+    environment:
+      SCHOLARMATE_EMBEDDING_MODEL: ${SCHOLARMATE_EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+    expose:
+      - "8000"
+    volumes:
+      - ml-model-cache:/home/appuser/.cache/huggingface
+
+  backend:
+    build:
+      context: ./scolarmate-backend
+    environment:
+      SCHOLARMATE_DB_USERNAME: ${SCHOLARMATE_DB_USERNAME:-postgres}
+      SCHOLARMATE_DB_PASSWORD: ${SCHOLARMATE_DB_PASSWORD:?Set SCHOLARMATE_DB_PASSWORD in .env}
+      SCHOLARMATE_ML_BASE_URL: http://ml-service:8000
+      SCHOLARMATE_DOCUMENT_STORAGE_DIR: /app/data/profile-documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+    expose:
+      - "8082"
+    volumes:
+      - profile-documents:/app/data/profile-documents
+
+  frontend:
+    build:
+      context: ./SchlorMateFrontend/SchlorMate
+      args:
+        VITE_API_URL: /api
+    depends_on:
+      - backend
+    ports:
+      - "5173:8080"
+
+volumes:
+  postgres-data:
+  ml-model-cache:
+  profile-documents:
