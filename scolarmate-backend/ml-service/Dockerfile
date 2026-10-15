@@ -3,7 +3,11 @@ FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    HF_HOME=/home/appuser/.cache/huggingface
+    HF_HOME=/home/appuser/.cache/huggingface \
+    SCHOLARMATE_ENABLE_SEMANTIC_MODEL=false \
+    TOKENIZERS_PARALLELISM=false \
+    OMP_NUM_THREADS=1 \
+    MALLOC_ARENA_MAX=2
 
 WORKDIR /app
 COPY requirements.txt ./

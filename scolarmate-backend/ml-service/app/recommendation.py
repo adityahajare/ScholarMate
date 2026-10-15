@@ -9,7 +9,6 @@ from typing import Any
 import networkx as nx
 import numpy as np
 import torch
-from sentence_transformers import SentenceTransformer
 from sklearn.cluster import HDBSCAN, KMeans
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.metrics import davies_bouldin_score, silhouette_score
@@ -38,6 +37,12 @@ PIPELINE_VERSION = "unsupervised-hybrid-v1"
 LATENT_DIMENSIONS = 32
 RANKING_WEIGHTS = {"autoencoder": 0.25, "semantic": 0.35, "clustering": 0.20, "graph": 0.20}
 SEMANTIC_MODEL = os.getenv("SCHOLARMATE_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+SEMANTIC_ENABLED = os.getenv("SCHOLARMATE_ENABLE_SEMANTIC_MODEL", "false").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 TOKEN_PATTERN = re.compile(r"[^\w]+", re.UNICODE)
 
 
@@ -64,12 +69,18 @@ class Autoencoder(nn.Module):
 
 
 @lru_cache(maxsize=1)
-def _sentence_model() -> SentenceTransformer:
+def _sentence_model():
+    # Import lazily so low-memory deployments can use the deterministic
+    # feature/graph fallback without loading the transformer stack.
+    from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(SEMANTIC_MODEL, device="cpu")
 
 
 def warm_up_semantic_model() -> str:
     """Load the embedding model during startup instead of the first request."""
+    if not SEMANTIC_ENABLED:
+        return "disabled"
     _sentence_model()
     return SEMANTIC_MODEL
 
@@ -113,6 +124,8 @@ def _scholarship_text(scholarship: Any) -> str:
 
 
 def semantic_scores(student: Any, scholarships: list[Any]) -> tuple[list[float], str]:
+    if not SEMANTIC_ENABLED:
+        return [0.0] * len(scholarships), "disabled"
     try:
         model = _sentence_model()
         texts = [_student_text(student)] + [_scholarship_text(item) for item in scholarships]
