@@ -3,8 +3,8 @@
   "outputDirectory": "SchlorMate/SchlorMate/dist",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://scholarmate-backend1.onrender.com/api/:path*"
+      "source": "/api/(.*)",
+      "destination": "https://scholarmate-backend1.onrender.com/api/$1"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
