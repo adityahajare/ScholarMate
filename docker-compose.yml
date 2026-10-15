@@ -7,6 +7,8 @@ services:
       POSTGRES_PASSWORD: ${SCHOLARMATE_DB_PASSWORD:?Set SCHOLARMATE_DB_PASSWORD in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -32,6 +34,10 @@ services:
       SCHOLARMATE_DB_PASSWORD: ${SCHOLARMATE_DB_PASSWORD:?Set SCHOLARMATE_DB_PASSWORD in .env}
       SCHOLARMATE_ML_BASE_URL: http://ml-service:8000
       SCHOLARMATE_DOCUMENT_STORAGE_DIR: /app/data/profile-documents
+      SCHOLARMATE_SCRAPER_SCHEDULE_ENABLED: ${SCHOLARMATE_SCRAPER_SCHEDULE_ENABLED:-true}
+      SCHOLARMATE_SCRAPER_INITIAL_DELAY_MS: ${SCHOLARMATE_SCRAPER_INITIAL_DELAY_MS:-30000}
+      SCHOLARMATE_SCRAPER_MAX_CONCURRENT_SOURCES: ${SCHOLARMATE_SCRAPER_MAX_CONCURRENT_SOURCES:-1}
+      TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,7 +50,7 @@ services:
 
   frontend:
     build:
-      context: ./SchlorMateFrontend/SchlorMate
+      context: ./SchlorMate/SchlorMate
       args:
         VITE_API_URL: /api
     depends_on:

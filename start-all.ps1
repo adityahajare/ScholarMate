@@ -48,6 +48,8 @@ $python = Find-Python
 $env:SCHOLARMATE_DB_USERNAME = $DbUsername
 $env:SCHOLARMATE_DB_PASSWORD = $DbPassword
 $env:SCHOLARMATE_ML_BASE_URL = 'http://127.0.0.1:8000'
+$env:SCHOLARMATE_SCRAPER_SCHEDULE_ENABLED = 'true'
+$env:SCHOLARMATE_SCRAPER_INITIAL_DELAY_MS = '30000'
 
 Start-Process powershell.exe -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', "Set-Location '$ml'; & '$python' -m uvicorn app.main:app --host 127.0.0.1 --port 8000")
 Start-Process powershell.exe -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', "Set-Location '$backend'; & '$maven' spring-boot:run")

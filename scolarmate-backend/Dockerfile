@@ -2,9 +2,6 @@ FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /workspace
 COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw mvnw.cmd ./
-RUN mvn -B -DskipTests dependency:go-offline
 
 COPY src src
 RUN mvn -B -DskipTests package
@@ -12,7 +9,7 @@ RUN mvn -B -DskipTests package
 FROM eclipse-temurin:25-jre
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -25,4 +22,5 @@ COPY --from=build --chown=appuser:appuser /workspace/target/*.jar /app/app.jar
 USER appuser
 EXPOSE 8082
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -Djava.security.egd=file:/dev/./urandom"
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
