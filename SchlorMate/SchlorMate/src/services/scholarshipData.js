@@ -124,3 +124,65 @@ export function getAllScholarships() {
 export function getScholarshipById(id) {
   return SCHOLARSHIPS.find((scholarship) => scholarship.id === id) || null;
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
+function formatDate(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+}
+
+function normalizeScholarship(record) {
+  return {
+    id: String(record.id),
+    name: record.name || "Unnamed scholarship",
+    provider: record.provider || "Unknown provider",
+    description: record.description || "Scholarship details are being verified.",
+    benefitAmount: record.amount,
+    benefitPeriod: "",
+    deadline: formatDate(record.applicationDeadline),
+    officialApplyUrl: record.applicationUrl || "",
+    officialDetailsUrl: record.sourceUrl || record.specificationUrl || "",
+    applicationInstructions: "Review the official scholarship website before applying.",
+    category: record.category || "",
+    criteria: {
+      branches: record.course ? [record.course] : [],
+      states: record.state ? [record.state] : [],
+      categories: record.eligibleCategories
+        ? [record.eligibleCategories]
+        : [],
+      minimumScore: record.minimumCgpa,
+      scoreType: record.minimumCgpa != null ? "CGPA" : null,
+      maximumAnnualFamilyIncome: record.maximumFamilyIncome,
+    },
+    requiredDocuments: [],
+    dataStatus: "scraped",
+  };
+}
+
+export async function fetchAllScholarships() {
+  const response = await fetch(`${API_BASE_URL}/api/scholarships`);
+  if (!response.ok) {
+    throw new Error(`Unable to load scholarships (${response.status})`);
+  }
+
+  const records = await response.json();
+  return Array.isArray(records) ? records.map(normalizeScholarship) : [];
+}
+
+export async function fetchScholarshipById(id) {
+  const response = await fetch(`${API_BASE_URL}/api/scholarships/${id}`);
+  if (!response.ok) {
+    throw new Error(`Unable to load scholarship (${response.status})`);
+  }
+
+  return normalizeScholarship(await response.json());
+}

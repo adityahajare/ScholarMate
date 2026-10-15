@@ -18,7 +18,10 @@ import Card from "../../components/common/Card";
 import EmptyState from "../../components/common/EmptyState";
 import { useAuth } from "../../context/AuthContext";
 
-import { getAllScholarships } from "../../services/scholarshipData";
+import {
+  fetchAllScholarships,
+  getAllScholarships,
+} from "../../services/scholarshipData";
 
 import {
   addScholarshipToTracker,
@@ -81,7 +84,25 @@ function formatAmount(amount) {
 function Scholarships() {
   const { user } = useAuth();
 
-  const scholarships = getAllScholarships();
+  const [scholarships, setScholarships] = useState(() => getAllScholarships());
+
+  useEffect(() => {
+    let active = true;
+
+    fetchAllScholarships()
+      .then((records) => {
+        if (active && records.length > 0) {
+          setScholarships(records);
+        }
+      })
+      .catch(() => {
+        // Keep the small demo catalog visible if the backend is unavailable.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [search, setSearch] = useState("");
 
