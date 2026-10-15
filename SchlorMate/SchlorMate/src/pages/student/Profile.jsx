@@ -14,8 +14,8 @@ import { useAuth } from "../../context/AuthContext";
 
 import {
   EMPTY_STUDENT_PROFILE,
-  getStudentProfile,
-  saveStudentProfile,
+  getPersistedStudentProfile,
+  persistStudentProfile,
   getProfileCompletion,
 } from "../../services/studentProfileService";
 
@@ -156,14 +156,17 @@ function Profile() {
 
   // Load the logged-in student's saved profile.
   useEffect(() => {
-    const savedProfile = getStudentProfile(user?.email || undefined);
-
-    setFormData({
-      ...EMPTY_STUDENT_PROFILE,
-      ...savedProfile,
-      fullName: savedProfile.fullName || user?.name || "",
-      scoreType: savedProfile.scoreType || "CGPA",
+    let active = true;
+    getPersistedStudentProfile(user?.email || undefined).then((savedProfile) => {
+      if (!active) return;
+      setFormData({
+        ...EMPTY_STUDENT_PROFILE,
+        ...savedProfile,
+        fullName: savedProfile.fullName || user?.name || "",
+        scoreType: savedProfile.scoreType || "CGPA",
+      });
     });
+    return () => { active = false; };
   }, [user?.email, user?.name]);
 
   const completion = getProfileCompletion(formData);
@@ -200,7 +203,7 @@ function Profile() {
     setErrorMessage("");
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     setSavedSuccess(false);
@@ -246,7 +249,7 @@ function Profile() {
     }
 
     try {
-      const savedProfile = saveStudentProfile(formData, user.email);
+      const savedProfile = await persistStudentProfile(formData, user.email);
 
       setFormData({
         ...EMPTY_STUDENT_PROFILE,

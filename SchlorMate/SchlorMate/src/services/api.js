@@ -39,6 +39,17 @@ export function registerUser(payload) {
   });
 }
 
+export function getMyProfile() {
+  return request("/api/profiles/me");
+}
+
+export function updateMyProfile(profile) {
+  return request("/api/profiles/me", {
+    method: "PUT",
+    body: JSON.stringify(profile),
+  });
+}
+
 export function getMyRecommendations() {
   return request("/api/ml/recommendations/me");
 }

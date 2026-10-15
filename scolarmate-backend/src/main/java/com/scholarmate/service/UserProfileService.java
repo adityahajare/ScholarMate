@@ -101,6 +101,7 @@ public class UserProfileService {
         existingProfile.setDomicileState(updatedProfile.getDomicileState());
         existingProfile.setFeatures(updatedProfile.getFeatures());
         existingProfile.setBehaviors(updatedProfile.getBehaviors());
+        existingProfile.setProfileData(updatedProfile.getProfileData());
 
         return userProfileRepository.save(existingProfile);
     }

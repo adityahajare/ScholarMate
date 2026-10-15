@@ -61,6 +61,15 @@ public class UserProfile {
     @Builder.Default
     private Map<String, FeatureStatusValue> behaviors = new HashMap<>();
 
+    /**
+     * Stores the complete frontend profile form so fields that are more
+     * detailed than the ML profile remain available after a new login/device.
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "profile_data", columnDefinition = "jsonb")
+    @Builder.Default
+    private Map<String, Object> profileData = new HashMap<>();
+
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
