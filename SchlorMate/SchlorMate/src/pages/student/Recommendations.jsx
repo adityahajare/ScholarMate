@@ -30,28 +30,7 @@ import {
   addScholarshipToTracker,
   getStudentApplications,
 } from "../../services/applicationService";
-
-// Temporary demonstration values for the prototype.
-const DEMO_RECOMMENDATIONS = {
-  "aicte-pragati-demo": {
-    matchScore: 96,
-    selectionChance: 85,
-    deadline: "30 Sep 2026",
-    label: "Best Match",
-  },
-  "national-scholarship-demo": {
-    matchScore: 91,
-    selectionChance: 78,
-    deadline: "15 Oct 2026",
-    label: "Strong Match",
-  },
-  "maharashtra-state-scholarship-demo": {
-    matchScore: 87,
-    selectionChance: 74,
-    deadline: "31 Oct 2026",
-    label: "Good Match",
-  },
-};
+import { getMyRecommendations } from "../../services/api";
 
 const ALLOWED_OFFICIAL_HOSTS = [
   "scholarships.gov.in",
@@ -107,6 +86,9 @@ function Recommendations() {
     () => new Set(),
   );
   const [trackerMessages, setTrackerMessages] = useState({});
+  const [mlRecommendations, setMlRecommendations] = useState([]);
+  const [mlLoading, setMlLoading] = useState(true);
+  const [mlError, setMlError] = useState("");
 
   // Load the student's profile and saved tracker records.
   useEffect(() => {
@@ -129,20 +111,70 @@ function Recommendations() {
     );
   }, [user?.email]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadRecommendations() {
+      setMlLoading(true);
+      setMlError("");
+
+      try {
+        const response = await getMyRecommendations();
+        if (active) setMlRecommendations(response?.recommendations || []);
+      } catch (error) {
+        if (active) {
+          setMlRecommendations([]);
+          setMlError(error.message || "Unable to load AI recommendations.");
+        }
+      } finally {
+        if (active) setMlLoading(false);
+      }
+    }
+
+    if (user?.email && localStorage.getItem("scholarmate_access_token")) {
+      loadRecommendations();
+    } else {
+      setMlLoading(false);
+      setMlRecommendations([]);
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [user?.email]);
+
   const profileCompletion = profile ? getProfileCompletion(profile) : 0;
 
-  const recommendations = scholarships
-    .map((scholarship) => ({
-      ...scholarship,
-      ...(DEMO_RECOMMENDATIONS[scholarship.id] || {
-        matchScore: 75,
-        selectionChance: 60,
-        deadline: scholarship.deadline || "To be announced",
-        label: "Recommended",
+  const recommendations = mlRecommendations.map((recommendation, index) => {
+    const localScholarship = scholarships.find(
+      (scholarship) =>
+        String(scholarship.id) === String(recommendation.scholarshipId) ||
+        scholarship.name === recommendation.name,
+    );
+    const rawScore = Number(recommendation.score || 0);
+    const matchScore = Math.round(rawScore <= 1 ? rawScore * 100 : rawScore);
+
+    return {
+      ...localScholarship,
+      id: recommendation.scholarshipId,
+      name: recommendation.name,
+      provider: recommendation.provider,
+      description: recommendation.description || localScholarship?.description,
+      deadline:
+        recommendation.applicationDeadline ||
+        localScholarship?.deadline ||
+        "To be announced",
+      applicationUrl: recommendation.applicationUrl,
+      matchScore: Math.max(0, Math.min(100, matchScore)),
+      selectionChance: Math.max(0, Math.min(100, matchScore)),
+      label: index === 0 ? "Best AI Match" : "AI Recommended",
+      officialUrl: getOfficialApplyUrl({
+        ...localScholarship,
+        officialApplyUrl: recommendation.applicationUrl,
       }),
-      officialUrl: getOfficialApplyUrl(scholarship),
-    }))
-    .sort((a, b) => b.matchScore - a.matchScore);
+      mlReasons: recommendation.reasons || [],
+    };
+  });
 
   const averageMatch = recommendations.length
     ? Math.round(
@@ -343,6 +375,18 @@ function Recommendations() {
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
+
+      {mlLoading && (
+        <Card className="p-5 text-sm text-slate-500" hover={false}>
+          Running your profile through the ScholarMate ML ranking pipeline...
+        </Card>
+      )}
+
+      {!mlLoading && mlError && (
+        <Card className="p-5 text-sm text-rose-700 bg-rose-50 border-rose-200" hover={false}>
+          {mlError}. Complete your profile and try again.
+        </Card>
+      )}
 
       {recommendations.length > 0 ? (
         <div className="space-y-5">

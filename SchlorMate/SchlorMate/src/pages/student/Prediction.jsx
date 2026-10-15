@@ -24,43 +24,7 @@ import {
   getStudentProfile,
   getProfileCompletion,
 } from "../../services/studentProfileService";
-
-// Sample prediction values for the current prototype.
-// These will be replaced by the trained prediction model later.
-const DEMO_PREDICTIONS = {
-  "aicte-pragati-demo": {
-    chance: 85,
-    level: "High Selection Chance",
-    color: "#10b981",
-    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    academic: 90,
-    income: 95,
-    branch: 100,
-    documents: 80,
-  },
-
-  "national-scholarship-demo": {
-    chance: 78,
-    level: "Good Selection Chance",
-    color: "#2563eb",
-    badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-    academic: 88,
-    income: 85,
-    branch: 95,
-    documents: 75,
-  },
-
-  "maharashtra-state-scholarship-demo": {
-    chance: 74,
-    level: "Moderate-High Chance",
-    color: "#6366f1",
-    badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    academic: 82,
-    income: 90,
-    branch: 90,
-    documents: 70,
-  },
-};
+import { getMyRecommendations } from "../../services/api";
 
 function Prediction() {
   const { user } = useAuth();
@@ -72,30 +36,85 @@ function Prediction() {
   );
 
   const [profile, setProfile] = useState(null);
+  const [mlRecommendations, setMlRecommendations] = useState([]);
+  const [mlLoading, setMlLoading] = useState(true);
+  const [mlError, setMlError] = useState("");
 
   useEffect(() => {
     setProfile(getStudentProfile(user?.email || undefined));
+  }, [user?.email]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPredictions() {
+      setMlLoading(true);
+      setMlError("");
+
+      try {
+        const response = await getMyRecommendations();
+        if (active) setMlRecommendations(response?.recommendations || []);
+      } catch (error) {
+        if (active) {
+          setMlRecommendations([]);
+          setMlError(error.message || "Unable to load ML prediction.");
+        }
+      } finally {
+        if (active) setMlLoading(false);
+      }
+    }
+
+    if (user?.email && localStorage.getItem("scholarmate_access_token")) {
+      loadPredictions();
+    } else {
+      setMlLoading(false);
+    }
+
+    return () => {
+      active = false;
+    };
   }, [user?.email]);
 
   const selectedRecord = scholarships.find(
     (scholarship) => scholarship.id === selectedScholarship,
   );
 
-  const demoPrediction = DEMO_PREDICTIONS[selectedScholarship] || {
-    chance: 75,
-    level: "Good Selection Chance",
-    color: "#2563eb",
-    badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-    academic: 80,
-    income: 80,
-    branch: 85,
-    documents: 75,
+  const liveRecommendation = mlRecommendations.find(
+    (recommendation) =>
+      String(recommendation.scholarshipId) === String(selectedScholarship) ||
+      recommendation.name === selectedRecord?.name,
+  );
+  const rawScore = Number(liveRecommendation?.score || 0);
+  const liveChance = Math.max(0, Math.min(100, Math.round(rawScore <= 1 ? rawScore * 100 : rawScore)));
+  const signals = liveRecommendation?.signals || {};
+  const signalValue = (name, fallback = 0) => {
+    const value = Number(signals[name]);
+    return Number.isFinite(value) ? Math.round(value <= 1 ? value * 100 : value) : fallback;
+  };
+
+  const livePrediction = {
+    chance: liveChance,
+    level:
+      liveChance >= 80
+        ? "High Selection Chance"
+        : liveChance >= 60
+          ? "Good Selection Chance"
+          : "Needs Profile Improvement",
+    color: liveChance >= 80 ? "#10b981" : "#2563eb",
+    badgeColor:
+      liveChance >= 80
+        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+        : "bg-blue-50 text-blue-700 border-blue-200",
+    academic: signalValue("academic", 0),
+    income: signalValue("income", 0),
+    branch: signalValue("course", signalValue("branch", 0)),
+    documents: signalValue("documents", 0),
   };
 
   const profileCompletion = profile ? getProfileCompletion(profile) : 0;
 
   const prediction = {
-    ...demoPrediction,
+    ...livePrediction,
     profile: profileCompletion,
   };
 
@@ -194,6 +213,18 @@ function Prediction() {
       </Card>
 
       {/* Prediction Overview */}
+      {mlLoading && (
+        <Card className="p-5 text-sm text-slate-500" hover={false}>
+          Calculating your scholarship probability with the ML ranking pipeline...
+        </Card>
+      )}
+
+      {!mlLoading && mlError && (
+        <Card className="p-5 text-sm text-rose-700 bg-rose-50 border-rose-200" hover={false}>
+          {mlError}. Complete your profile and try again.
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Prediction Gauge */}
         <Card

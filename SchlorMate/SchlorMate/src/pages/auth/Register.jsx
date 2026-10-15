@@ -14,9 +14,12 @@ import {
 } from "lucide-react";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
+import { registerUser } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,8 +27,9 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -33,8 +37,18 @@ function Register() {
       return;
     }
 
-    // Temporary navigation to login as in original code
-    navigate("/login");
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await registerUser({ name: fullName, email, password });
+      login(response);
+      navigate("/dashboard");
+    } catch (requestError) {
+      setError(requestError.message || "Unable to create your account.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -191,11 +205,12 @@ function Register() {
               <div className="pt-2">
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   size="lg"
                   className="w-full"
                   icon={ArrowRight}
                 >
-                  Create Student Account
+                  {isSubmitting ? "Creating account..." : "Create Student Account"}
                 </Button>
               </div>
             </form>

@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
+import { loginUser } from "../../services/api";
 
 function Login() {
   const navigate = useNavigate();
@@ -22,25 +23,23 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
 
-    // Preserve existing authentication logic and data model
-    const userName = email ? email.split("@")[0].replace(/[^a-zA-Z]/g, " ") : "Student";
-    const formattedName =
-      userName.trim().length > 0
-        ? userName.charAt(0).toUpperCase() + userName.slice(1)
-        : "Student";
-
-    const userData = {
-      name: formattedName || "Student",
-      email: email || "student@example.com",
-      role: "student",
-    };
-
-    login(userData);
-    navigate("/dashboard");
+    try {
+      const response = await loginUser(email, password);
+      login(response);
+      navigate("/dashboard");
+    } catch (requestError) {
+      setError(requestError.message || "Unable to sign in.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -108,6 +107,11 @@ function Login() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                  {error}
+                </div>
+              )}
               {/* Email */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -164,11 +168,12 @@ function Login() {
               <div className="pt-2">
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   size="lg"
                   className="w-full"
                   icon={ArrowRight}
                 >
-                  Sign In to Dashboard
+                  {isSubmitting ? "Signing in..." : "Sign In to Dashboard"}
                 </Button>
               </div>
             </form>
