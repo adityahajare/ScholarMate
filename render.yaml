@@ -1,5 +1,15 @@
 services:
   - type: web
+    runtime: docker
+    name: scholarmate-ml-service
+    rootDir: scolarmate-backend/ml-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: SCHOLARMATE_ENABLE_SEMANTIC_MODEL
+        value: "false"
+
+  - type: web
     runtime: static
     name: scholarmate-frontend
     rootDir: SchlorMate/SchlorMate
