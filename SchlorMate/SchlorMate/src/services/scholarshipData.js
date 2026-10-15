@@ -129,6 +129,31 @@ const API_BASE_URL = import.meta.env.DEV
   ? import.meta.env.VITE_API_URL || "https://scholarmate-backend1.onrender.com"
   : "";
 
+async function fetchWithRetry(url, attempts = 3) {
+  let lastError;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const response = await fetch(url);
+
+      if (response.status >= 500 && attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+      }
+    }
+  }
+
+  throw lastError || new Error("Backend is unavailable.");
+}
+
 function formatDate(value) {
   if (!value) return "";
 
@@ -171,7 +196,7 @@ function normalizeScholarship(record) {
 }
 
 export async function fetchAllScholarships() {
-  const response = await fetch(`${API_BASE_URL}/api/scholarships`);
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/scholarships`);
   if (!response.ok) {
     throw new Error(`Unable to load scholarships (${response.status})`);
   }
@@ -181,7 +206,7 @@ export async function fetchAllScholarships() {
 }
 
 export async function fetchScholarshipById(id) {
-  const response = await fetch(`${API_BASE_URL}/api/scholarships/${id}`);
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/scholarships/${id}`);
   if (!response.ok) {
     throw new Error(`Unable to load scholarship (${response.status})`);
   }
