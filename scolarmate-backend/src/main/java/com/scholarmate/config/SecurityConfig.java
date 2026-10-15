@@ -12,12 +12,18 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.util.Arrays;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Value("${scholarmate.frontend-url:http://localhost:5173}")
+    private String frontendUrl;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -67,7 +73,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(java.util.List.of("http://localhost:5173", "http://127.0.0.1:5173"));
+        var allowedOrigins = new java.util.ArrayList<>(java.util.List.of(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173"
+        ));
+        Arrays.stream(frontendUrl.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .forEach(allowedOrigins::add);
+        configuration.setAllowedOrigins(allowedOrigins.stream().distinct().toList());
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

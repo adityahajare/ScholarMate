@@ -5,10 +5,15 @@ import com.scholarmate.repository.ScholarshipSourceRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.List;
 
 @Configuration
+@ConditionalOnProperty(
+        name = "scholarmate.sources.initialize",
+        havingValue = "true",
+        matchIfMissing = true)
 public class ScholarshipSourceInitializer {
 
     @Bean
