@@ -19,7 +19,10 @@ import {
 import Card from "../../components/common/Card";
 import { useAuth } from "../../context/AuthContext";
 
-import { getAllScholarships } from "../../services/scholarshipData";
+import {
+  fetchAllScholarships,
+  getAllScholarships,
+} from "../../services/scholarshipData";
 
 import {
   getStudentProfile,
@@ -79,7 +82,7 @@ function formatAmount(amount) {
 function Recommendations() {
   const { user } = useAuth();
 
-  const scholarships = getAllScholarships();
+  const [scholarships, setScholarships] = useState(() => getAllScholarships());
 
   const [profile, setProfile] = useState(null);
   const [savedScholarshipIds, setSavedScholarshipIds] = useState(
@@ -89,6 +92,22 @@ function Recommendations() {
   const [mlRecommendations, setMlRecommendations] = useState([]);
   const [mlLoading, setMlLoading] = useState(true);
   const [mlError, setMlError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    fetchAllScholarships()
+      .then((records) => {
+        if (active && records.length > 0) setScholarships(records);
+      })
+      .catch(() => {
+        // Keep the demo catalog visible if the catalog API is unavailable.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Load the student's profile and saved tracker records.
   useEffect(() => {
