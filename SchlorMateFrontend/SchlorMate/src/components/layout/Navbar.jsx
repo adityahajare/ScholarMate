@@ -21,7 +21,7 @@ function Navbar({ onMenuClick }) {
     navigate("/login");
   };
 
-  const displayName = user?.name || "Aditya";
+  const displayName = user?.name || "Student";
   const displayRole = user?.role ? user.role.toLowerCase() : "student";
 
   return (
@@ -78,7 +78,7 @@ function Navbar({ onMenuClick }) {
             <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 animate-fadeIn">
               <div className="px-3 py-2 border-b border-slate-100 mb-1">
                 <p className="text-xs font-bold text-slate-900 truncate">{displayName}</p>
-                <p className="text-[11px] text-slate-500 truncate">{user?.email || "aditya@student.in"}</p>
+                <p className="text-[11px] text-slate-500 truncate">{user?.email || "Signed-in account"}</p>
               </div>
 
               <button
