@@ -77,7 +77,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         var allowedOrigins = new java.util.ArrayList<>(java.util.List.of(
                 "http://localhost:5173",
-                "http://127.0.0.1:5173"
+                "http://127.0.0.1:5173",
+                "https://scholar-mate-7kxx.vercel.app"
         ));
         Arrays.stream(frontendUrl.split(","))
                 .map(String::trim)
