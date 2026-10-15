@@ -28,6 +28,12 @@ function App() {
         {/* Default route redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
+        {/* Backwards-compatible URL used by older frontend deployments */}
+        <Route
+          path="/student/scholarships"
+          element={<Navigate to="/scholarships" replace />}
+        />
+
         {/* Authentication */}
 
         <Route path="/login" element={<Login />} />
