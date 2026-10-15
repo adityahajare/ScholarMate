@@ -23,6 +23,12 @@ public class RegisterRequest {
     @NotBlank
     private String password;
 
+    private String mobile;
+
+    private String educationType;
+
+    private String educationLevel;
+
     private String course;
 
     private String college;
@@ -50,6 +56,16 @@ public class RegisterRequest {
     private String institutionType;
 
     private String educationStage;
+
+    private String guardianName;
+
+    private String guardianPhone;
+
+    private Boolean isUnder18 = false;
+
+    private Boolean termsAccepted = false;
+
+    private String role = "STUDENT";
 
     private Map<String, FeatureStatusValue> features = new HashMap<>();
 

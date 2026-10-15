@@ -32,8 +32,11 @@ public class UserProfileController {
 
     @PostMapping("/{userId}")
     public ResponseEntity<UserProfile> createProfile(
+            Authentication authentication,
             @PathVariable Long userId,
             @RequestBody UserProfile profile) {
+
+        userProfileService.assertCanAccess(userId, authentication);
 
         UserProfile savedProfile =
                 userProfileService.createProfile(userId, profile);
@@ -43,7 +46,10 @@ public class UserProfileController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserProfile> getProfile(
+            Authentication authentication,
             @PathVariable Long userId) {
+
+        userProfileService.assertCanAccess(userId, authentication);
 
         return ResponseEntity.ok(
                 userProfileService.getProfileByUserId(userId)
@@ -52,7 +58,10 @@ public class UserProfileController {
 
     @GetMapping("/{userId}/completion")
     public ResponseEntity<ProfileCompletionResponse> getProfileCompletion(
+            Authentication authentication,
             @PathVariable Long userId) {
+
+        userProfileService.assertCanAccess(userId, authentication);
 
         return ResponseEntity.ok(
                 userProfileService.getProfileCompletion(userId)
@@ -61,8 +70,11 @@ public class UserProfileController {
 
     @PutMapping("/{userId}")
     public ResponseEntity<UserProfile> updateProfile(
+            Authentication authentication,
             @PathVariable Long userId,
             @RequestBody UserProfile updatedProfile) {
+
+        userProfileService.assertCanAccess(userId, authentication);
 
         return ResponseEntity.ok(
                 userProfileService.updateProfile(userId, updatedProfile)
@@ -71,7 +83,10 @@ public class UserProfileController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<String> deleteProfile(
+            Authentication authentication,
             @PathVariable Long userId) {
+
+        userProfileService.assertCanAccess(userId, authentication);
 
         userProfileService.deleteProfile(userId);
 

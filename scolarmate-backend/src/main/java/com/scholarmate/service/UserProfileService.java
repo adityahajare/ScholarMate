@@ -6,6 +6,7 @@ import com.scholarmate.entity.UserProfile;
 import com.scholarmate.repository.UserProfileRepository;
 import com.scholarmate.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,6 +119,20 @@ public class UserProfileService {
                         new RuntimeException("Profile not found"));
 
         userProfileRepository.delete(profile);
+    }
+
+    public void assertCanAccess(Long userId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("Authentication required");
+        }
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        if (admin) return;
+        User owner = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!userId.equals(owner.getId())) {
+            throw new RuntimeException("Profile access denied");
+        }
     }
 
     private boolean isFilled(String value) {

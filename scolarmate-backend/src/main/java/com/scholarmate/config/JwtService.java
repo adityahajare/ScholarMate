@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +19,23 @@ import java.util.function.Function;
 public class JwtService {
 
     private final String secretString;
-    private final long expirationMs;
+    private final long accessExpirationMs;
+    private final long refreshExpirationMs;
 
+    @Autowired
     public JwtService(
             @Value("${scholarmate.jwt.secret:scholarmate-super-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256-security}") String secretString,
-            @Value("${scholarmate.jwt.expiration-ms:86400000}") long expirationMs) {
+            @Value("${scholarmate.jwt.access-expiration-ms:${scholarmate.jwt.expiration-ms:900000}}") long accessExpirationMs,
+            @Value("${scholarmate.jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs) {
         this.secretString = secretString;
-        this.expirationMs = expirationMs;
+        this.accessExpirationMs = accessExpirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
+    }
+
+    public JwtService(String secretString, long expirationMs) {
+        this.secretString = secretString;
+        this.accessExpirationMs = expirationMs;
+        this.refreshExpirationMs = 604800000L;
     }
 
     private SecretKey getSigningKey() {
@@ -33,6 +44,18 @@ public class JwtService {
     }
 
     public String generateToken(String username, String role, Long userId) {
+        return generateAccessToken(username, role, userId);
+    }
+
+    public String generateAccessToken(String username, String role, Long userId) {
+        return createToken(username, role, userId, "access", accessExpirationMs);
+    }
+
+    public String generateRefreshToken(String username, Long userId) {
+        return createToken(username, null, userId, "refresh", refreshExpirationMs);
+    }
+
+    private String createToken(String username, String role, Long userId, String tokenType, long expirationMs) {
         Map<String, Object> claims = new HashMap<>();
         if (role != null) {
             claims.put("role", role);
@@ -40,18 +63,19 @@ public class JwtService {
         if (userId != null) {
             claims.put("userId", userId);
         }
-        return createToken(claims, username);
-    }
-
-    private String createToken(Map<String, Object> claims, String subject) {
+        claims.put("tokenType", tokenType);
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .claims(claims)
-                .subject(subject)
+                .subject(username)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + expirationMs))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(extractAllClaims(token).get("tokenType", String.class));
     }
 
     public String extractUsername(String token) {
@@ -81,6 +105,6 @@ public class JwtService {
 
     public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return !isRefreshToken(token) && username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 }
