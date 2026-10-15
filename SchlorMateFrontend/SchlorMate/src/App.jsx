@@ -21,27 +21,28 @@ import NotFound from "./pages/NotFound";
 
 import MainLayout from "./components/layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import ProfileSetup from "./pages/profile/ProfileSetup";
-import ProfileBuilder from "./pages/profile/ProfileBuilder";
+import EducationTypeSelector from "./pages/profile/EducationTypeSelector";
+import ProfileBuilderLayout from "./pages/profile/ProfileBuilderLayout";
+import PersonalInfoForm from "./pages/profile/steps/PersonalInfoForm";
+import ReviewSubmit from "./pages/profile/steps/ReviewSubmit";
+
+
+import LandingPage from "./pages/LandingPage";
+import Documents from "./pages/student/Documents";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Default route redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Public Landing Page */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* Authentication */}
-
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding/verify" element={<ProtectedRoute><OnboardingVerification /></ProtectedRoute>} />
 
-        <Route path="/profile/setup" element={<ProtectedRoute><MainLayout><ProfileSetup /></MainLayout></ProtectedRoute>} />
-        <Route path="/profile/builder" element={<ProtectedRoute><MainLayout><ProfileBuilder /></MainLayout></ProtectedRoute>} />
-
         {/* User Application */}
-
         <Route
           path="/dashboard"
           element={
@@ -53,12 +54,30 @@ function App() {
           }
         />
 
+        {/* Profile Builder & Profile Routes */}
+        <Route path="/profile/education" element={<EducationTypeSelector />} />
+        <Route path="/profile/builder" element={<ProfileBuilderLayout />}>
+          <Route index element={<PersonalInfoForm />} />
+          <Route path="review" element={<ReviewSubmit />} />
+        </Route>
         <Route
           path="/profile"
           element={
             <ProtectedRoute>
               <MainLayout>
                 <Profile />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Documents Vault */}
+        <Route
+          path="/documents"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Documents />
               </MainLayout>
             </ProtectedRoute>
           }

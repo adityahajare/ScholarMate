@@ -20,13 +20,23 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.scholarmate.config.JwtService jwtService;
+
+    public UserService(UserRepository userRepository,
+                       UserProfileRepository userProfileRepository,
+                       PasswordEncoder passwordEncoder,
+                       com.scholarmate.config.JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
     public UserService(UserRepository userRepository,
                        UserProfileRepository userProfileRepository,
                        PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.userProfileRepository = userProfileRepository;
-        this.passwordEncoder = passwordEncoder;
+        this(userRepository, userProfileRepository, passwordEncoder,
+                new com.scholarmate.config.JwtService("scholarmate-super-secret-key-must-be-at-least-256-bits-long-for-hmac-sha256-security", 86400000));
     }
 
     /**
@@ -69,7 +79,8 @@ public class UserService {
 
         userProfileRepository.save(profile);
 
-        return new RegisterResponse(savedUser.getId(), savedUser.getName(), savedUser.getEmail(), savedUser.getRole());
+        String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRole(), savedUser.getId());
+        return new RegisterResponse(savedUser.getId(), savedUser.getName(), savedUser.getEmail(), savedUser.getRole(), token);
     }
 
     /**

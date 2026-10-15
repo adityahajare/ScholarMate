@@ -22,14 +22,21 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   const login = (userData, password) => {
-    const credentials = btoa(`${userData.email}:${password}`);
-    localStorage.setItem("scholarmate_credentials", credentials);
+    if (userData?.token) {
+      localStorage.setItem("scholarmate_token", userData.token);
+    }
+    if (password && userData?.email) {
+      const credentials = btoa(`${userData.email}:${password}`);
+      localStorage.setItem("scholarmate_credentials", credentials);
+    }
     setUser(userData);
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("scholarmate_token");
     localStorage.removeItem("scholarmate_credentials");
+    localStorage.removeItem("scholarmate_user");
   };
 
   return (

@@ -15,7 +15,7 @@ const percentage = (draft, field) => { const value = Number(getValue(draft, fiel
 
 function ProfileBuilder() {
   const { draft, loading, saveStep } = useProfile();
-  const educationType = draft?.educationType?.value;
+  const educationType = draft?.educationType?.value || 'UNDERGRADUATE';
   const sections = useMemo(() => getSections(educationType), [educationType]);
   const [active, setActive] = useState(0);
   const [localDraft, setLocalDraft] = useState(draft || {});

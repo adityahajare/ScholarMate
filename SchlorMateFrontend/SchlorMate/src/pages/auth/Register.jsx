@@ -1,42 +1,233 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, FileCheck2, Lock, Mail, UserRound } from "lucide-react";
-import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
+import { GraduationCap, Eye, EyeOff } from "lucide-react";
 import { authApi } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
-const stages = [
-  { label: "Account", hint: "Your secure sign-in" },
-  { label: "About you", hint: "Education, work, or school" },
-  { label: "Review", hint: "Optional proof check" },
-];
-const lifeStages = ["JRKG / kindergarten", "Primary school", "Higher secondary school", "College / diploma", "Engineering", "MBA / MCA", "BSc / BCom", "Medical / health sciences", "Postgraduate / research", "Working professional", "Job seeker", "Other"];
-
-function Field({ label, ...props }) {
-  return <label className="block text-sm font-semibold text-slate-700">{label}<input {...props} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15" /></label>;
-}
-
-function Register() {
+export default function Register() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [step, setStep] = useState(0);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+    password: "",
+    confirmPassword: "",
+    profileType: "",
+    educationLevel: "",
+    termsAgreed: true,
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", age: "", lifeStage: "", occupation: "", institutionType: "", course: "", college: "", state: "", category: "", gender: "", yearOfStudy: "", cgpa: "", familyIncome: "" });
-  const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
-  const next = () => { setError(""); if (step === 0 && (!form.name || !form.email || !form.password)) return setError("Name, email, and password are required."); if (step === 0 && form.password !== form.confirmPassword) return setError("Passwords do not match."); if (step === 1 && !form.lifeStage) return setError("Choose the stage that best describes you."); setStep((current) => Math.min(current + 1, 2)); };
-  const createAccount = async (skipOptionalDetails = false) => { setError(""); setSubmitting(true); try { const { data } = await authApi.register({ name: form.name, email: form.email, password: form.password, age: skipOptionalDetails ? null : (form.age ? Number(form.age) : null), lifeStage: skipOptionalDetails ? null : form.lifeStage, occupation: skipOptionalDetails ? null : (form.occupation || null), institutionType: skipOptionalDetails ? null : (form.institutionType || null), course: skipOptionalDetails ? null : (form.course || null), college: skipOptionalDetails ? null : (form.college || null), state: skipOptionalDetails ? null : (form.state || null), category: skipOptionalDetails ? null : (form.category || null), gender: skipOptionalDetails ? null : (form.gender || null), yearOfStudy: skipOptionalDetails ? null : (form.yearOfStudy ? Number(form.yearOfStudy) : null), cgpa: skipOptionalDetails ? null : (form.cgpa ? Number(form.cgpa) : null), familyIncome: skipOptionalDetails ? null : (form.familyIncome ? Number(form.familyIncome) : null) }); login(data, form.password); navigate("/onboarding/verify"); } catch (requestError) { setError(requestError.response?.data?.message || requestError.response?.data || "Unable to create this account."); } finally { setSubmitting(false); } };
 
-  return <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6"><div className="mx-auto max-w-3xl"><div className="mb-8 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white"><UserRound /></div><h1 className="text-3xl font-extrabold text-slate-900">Create your ScholarMate account</h1><p className="mt-2 text-sm text-slate-500">For learners, job seekers, workers, and families at every education stage.</p></div>
-    <div className="mb-6 grid grid-cols-3 gap-2">{stages.map((item, index) => <div key={item.label} className={`rounded-xl border p-3 ${index <= step ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-white"}`}><div className="flex items-center gap-2 text-sm font-bold"><span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${index < step ? "bg-blue-600 text-white" : index === step ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"}`}>{index < step ? <Check className="h-4 w-4" /> : index + 1}</span>{item.label}</div><p className="mt-1 hidden text-xs text-slate-500 sm:block">{item.hint}</p></div>)}</div>
-    <Card className="p-6 sm:p-8" hover={false}>{error && <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-700">{String(error)}</div>}
-      {step === 0 && <div className="space-y-4"><div><h2 className="text-xl font-bold text-slate-900">Secure account</h2><p className="mt-1 text-sm text-slate-500">Use an email you can access for scholarship deadline reminders.</p></div><Field label="Full name" value={form.name} onChange={update("name")} placeholder="Your name" required /><Field label="Email" type="email" value={form.email} onChange={update("email")} placeholder="you@example.com" required /><div><label className="block text-sm font-semibold text-slate-700">Password<div className="relative"><input type={showPassword ? "text" : "password"} value={form.password} onChange={update("password")} minLength={6} placeholder="At least 6 characters" required className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-11 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-4 text-slate-400">{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div></label></div><Field label="Confirm password" type={showPassword ? "text" : "password"} value={form.confirmPassword} onChange={update("confirmPassword")} placeholder="Repeat your password" required /></div>}
-      {step === 1 && <div className="space-y-4"><div><h2 className="text-xl font-bold text-slate-900">Tell us about yourself</h2><p className="mt-1 text-sm text-slate-500">Only provide what applies. Missing scholarship fields can be added later.</p></div><div className="grid gap-4 sm:grid-cols-2"><Field label="Age" type="number" min="3" max="120" value={form.age} onChange={update("age")} placeholder="Optional" /><label className="block text-sm font-semibold text-slate-700">Current stage<select value={form.lifeStage} onChange={update("lifeStage")} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm"><option value="">Choose one</option>{lifeStages.map((stageName) => <option key={stageName}>{stageName}</option>)}</select></label><Field label="Occupation / goal" value={form.occupation} onChange={update("occupation")} placeholder="Optional" /><Field label="Institution type" value={form.institutionType} onChange={update("institutionType")} placeholder="School, college, employer, etc." /><Field label="Course / stream" value={form.course} onChange={update("course")} placeholder="Optional" /><Field label="Institution name" value={form.college} onChange={update("college")} placeholder="Optional" /><Field label="State / region" value={form.state} onChange={update("state")} placeholder="Optional" /><Field label="Social category" value={form.category} onChange={update("category")} placeholder="Optional" /></div><p className="rounded-xl bg-blue-50 p-3 text-xs leading-relaxed text-blue-800">This supports school, college, engineering, MBA, MCA, BSc, BCom, medical, research, employment, and other opportunity paths. We do not assume everyone is a student.</p></div>}
-      {step === 2 && <div className="space-y-5"><div><h2 className="text-xl font-bold text-slate-900">Account ready for proof review</h2><p className="mt-1 text-sm text-slate-500">After creation, you can upload a certificate, marksheet, income proof, or other document. OCR only suggests data; you approve what gets saved.</p></div><div className="rounded-2xl border border-blue-100 bg-blue-50 p-5"><div className="flex gap-3"><FileCheck2 className="mt-0.5 h-5 w-5 text-blue-700" /><div><p className="font-bold text-blue-900">No document is required to register</p><p className="mt-1 text-sm text-blue-800">You can skip proof review and continue to the dashboard. We never claim a document is verified automatically.</p></div></div></div><div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2"><div className="rounded-xl border border-slate-200 p-4"><Lock className="mb-2 h-4 w-4 text-emerald-600" /><b className="block text-slate-900">Password protected</b>Your password is stored by the backend as a hash.</div><div className="rounded-xl border border-slate-200 p-4"><Mail className="mb-2 h-4 w-4 text-blue-600" /><b className="block text-slate-900">Real account identity</b>Login uses your saved name and email.</div></div></div>}
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-6">{step > 0 ? <Button variant="outline" onClick={() => setStep((current) => current - 1)} icon={ArrowLeft}>Back</Button> : <Link to="/login" className="inline-flex items-center text-sm font-semibold text-blue-600">Already have an account?</Link>}{step < 2 ? <div className="flex flex-wrap items-center justify-end gap-3">{step === 1 && <button type="button" onClick={() => createAccount(true)} disabled={submitting} className="text-sm font-semibold text-slate-500 underline-offset-4 hover:text-blue-600 hover:underline disabled:opacity-50">Skip optional details</button>}<Button onClick={next} icon={ArrowRight}>Continue</Button></div> : <div className="flex flex-wrap items-center justify-end gap-3"><button type="button" onClick={() => createAccount(true)} disabled={submitting} className="text-sm font-semibold text-slate-500 underline-offset-4 hover:text-blue-600 hover:underline disabled:opacity-50">Skip for now</button><Button onClick={createAccount} disabled={submitting} icon={ArrowRight}>{submitting ? "Creating..." : "Create account"}</Button></div>}</div>
-    </Card></div></div>;
+  const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!form.termsAgreed) {
+      return setError("Please agree to the Terms & Conditions to proceed.");
+    }
+    if (form.password !== form.confirmPassword) {
+      return setError("Passwords do not match.");
+    }
+    if (form.password.length < 6) {
+      return setError("Password must be at least 6 characters.");
+    }
+
+    setSubmitting(true);
+    try {
+      const { data } = await authApi.register({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        lifeStage: form.profileType || "Student",
+        educationStage: form.educationLevel || "UG",
+      });
+
+      login(data, form.password);
+      navigate("/dashboard");
+    } catch (requestError) {
+      setError(
+        requestError.response?.data?.message ||
+        requestError.response?.data?.error ||
+        "Unable to create account. Please check your details."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8f9fe] flex flex-col justify-center items-center py-12 px-4 sm:px-6 font-sans">
+      <div className="max-w-lg w-full">
+        {/* Brand Header */}
+        <div className="text-center mb-6">
+          <Link to="/" className="inline-flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6355ff] to-[#4838e8] flex items-center justify-center text-white shadow-md shadow-indigo-600/30">
+              <GraduationCap className="w-6 h-6" />
+            </div>
+            <span className="text-2xl font-black text-slate-900 tracking-tight">
+              Scholar<span className="text-[#544af4]">Mate</span>
+            </span>
+          </Link>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Create Account</h1>
+          <p className="text-xs text-slate-500 mt-1">Join ScholarMate and unlock opportunities</p>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-8 sm:p-10">
+          {error && (
+            <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700">
+              {String(error)}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+              <input
+                type="text"
+                required
+                value={form.name}
+                onChange={update("name")}
+                placeholder="Enter your full name"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={update("email")}
+                  placeholder="Enter your email"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number</label>
+                <input
+                  type="tel"
+                  value={form.mobile}
+                  onChange={update("mobile")}
+                  placeholder="Enter your mobile number"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={form.password}
+                    onChange={update("password")}
+                    placeholder="Create a password"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 pr-9"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Confirm Password</label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={form.confirmPassword}
+                  onChange={update("confirmPassword")}
+                  placeholder="Confirm your password"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Profile Type</label>
+                <select
+                  value={form.profileType}
+                  onChange={update("profileType")}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-700"
+                >
+                  <option value="">Select profile type</option>
+                  <option value="Student">Student</option>
+                  <option value="Working professional">Working Professional</option>
+                  <option value="Job seeker">Job Seeker</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Education Level</label>
+                <select
+                  value={form.educationLevel}
+                  onChange={update("educationLevel")}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-700"
+                >
+                  <option value="">Select education level</option>
+                  <option value="SCHOOL">School (10th/12th)</option>
+                  <option value="DIPLOMA">Diploma / Polytechnic</option>
+                  <option value="UG">Undergraduate (B.Tech/BSc/BCom)</option>
+                  <option value="PG">Postgraduate (Masters/MBA)</option>
+                  <option value="PHD_RESEARCH">PhD / Research</option>
+                  <option value="VOCATIONAL">Vocational / Skill Dev</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={form.termsAgreed}
+                  onChange={(e) => setForm({ ...form, termsAgreed: e.target.checked })}
+                  className="w-4 h-4 rounded text-[#544af4] border-slate-300 focus:ring-indigo-500"
+                />
+                <span>
+                  I agree to the{" "}
+                  <a href="#" className="text-[#544af4] font-semibold hover:underline">
+                    Terms & Conditions
+                  </a>
+                </span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full mt-3 py-3 px-4 rounded-xl bg-[#544af4] hover:bg-[#4438e8] text-white font-bold text-sm shadow-md shadow-indigo-600/25 transition disabled:opacity-50 cursor-pointer"
+            >
+              {submitting ? "Creating Account..." : "Create Account"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center text-xs text-slate-500">
+            Already have an account?{" "}
+            <Link to="/login" className="font-bold text-[#544af4] hover:underline">
+              Login
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
-
-export default Register;

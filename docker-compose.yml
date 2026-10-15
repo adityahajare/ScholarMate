@@ -27,6 +27,7 @@ services:
     build:
       context: ./scolarmate-backend
     environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-scholarmate_db}
       SCHOLARMATE_DB_USERNAME: ${SCHOLARMATE_DB_USERNAME:-postgres}
       SCHOLARMATE_DB_PASSWORD: ${SCHOLARMATE_DB_PASSWORD:?Set SCHOLARMATE_DB_PASSWORD in .env}
       SCHOLARMATE_ML_BASE_URL: http://ml-service:8000
