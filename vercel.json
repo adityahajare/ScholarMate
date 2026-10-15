@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd SchlorMate/SchlorMate && npm ci && npm run build",
+  "outputDirectory": "SchlorMate/SchlorMate/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
