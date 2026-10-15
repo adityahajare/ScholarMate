@@ -2,7 +2,7 @@ services:
   - type: web
     runtime: static
     name: scholarmate-frontend
-    rootDir: SchlorMateFrontend/SchlorMate
+    rootDir: SchlorMate/SchlorMate
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     routes:

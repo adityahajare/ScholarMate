@@ -125,7 +125,8 @@ export function getScholarshipById(id) {
   return SCHOLARSHIPS.find((scholarship) => scholarship.id === id) || null;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://scholarmate-backend1.onrender.com";
 
 function formatDate(value) {
   if (!value) return "";
