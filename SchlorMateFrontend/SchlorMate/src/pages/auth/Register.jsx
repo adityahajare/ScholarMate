@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GraduationCap, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, ShieldCheck, UserCheck } from "lucide-react";
 import { authApi } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -14,23 +14,32 @@ export default function Register() {
     mobile: "",
     password: "",
     confirmPassword: "",
-    profileType: "",
-    educationLevel: "",
+    educationType: "UNDERGRADUATE",
+    educationLevel: "First Year (UG)",
+    course: "Computer Engineering",
+    state: "Maharashtra",
+    isUnder18: false,
+    guardianName: "",
+    guardianPhone: "",
     termsAgreed: true,
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const update = (key) => (e) => {
+    const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    setForm((prev) => ({ ...prev, [key]: val }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     if (!form.termsAgreed) {
-      return setError("Please agree to the Terms & Conditions to proceed.");
+      return setError("Please agree to the Terms & Conditions and Privacy Policy to proceed.");
     }
     if (form.password !== form.confirmPassword) {
       return setError("Passwords do not match.");
@@ -38,33 +47,51 @@ export default function Register() {
     if (form.password.length < 6) {
       return setError("Password must be at least 6 characters.");
     }
+    if (form.isUnder18 && (!form.guardianName.trim() || !form.guardianPhone.trim())) {
+      return setError("Guardian name and contact phone are required for students under 18 years old.");
+    }
 
     setSubmitting(true);
     try {
       const { data } = await authApi.register({
-        name: form.name,
-        email: form.email,
+        name: form.name.trim(),
+        email: form.email.toLowerCase().trim(),
+        mobile: form.mobile.trim(),
         password: form.password,
-        lifeStage: form.profileType || "Student",
-        educationStage: form.educationLevel || "UG",
+        educationType: form.educationType,
+        educationLevel: form.educationLevel,
+        course: form.course.trim(),
+        state: form.state,
+        isUnder18: form.isUnder18,
+        guardianName: form.isUnder18 ? form.guardianName.trim() : null,
+        guardianPhone: form.isUnder18 ? form.guardianPhone.trim() : null,
+        termsAccepted: form.termsAgreed,
+        role: "STUDENT",
       });
 
-      login(data, form.password);
+      login(data);
       navigate("/dashboard");
     } catch (requestError) {
       setError(
         requestError.response?.data?.message ||
         requestError.response?.data?.error ||
-        "Unable to create account. Please check your details."
+        "Unable to create account. Please check your details and try again."
       );
     } finally {
       setSubmitting(false);
     }
   };
 
+  const indianStates = [
+    "Andhra Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Gujarat",
+    "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Odisha", "Punjab", "Rajasthan",
+    "Tamil Nadu", "Telangana", "Uttar Pradesh", "Uttarakhand", "West Bengal", "All India / Other"
+  ];
+
   return (
     <div className="min-h-screen bg-[#f8f9fe] flex flex-col justify-center items-center py-12 px-4 sm:px-6 font-sans">
-      <div className="max-w-lg w-full">
+      <div className="max-w-xl w-full">
         {/* Brand Header */}
         <div className="text-center mb-6">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
@@ -75,8 +102,8 @@ export default function Register() {
               Scholar<span className="text-[#544af4]">Mate</span>
             </span>
           </Link>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Create Account</h1>
-          <p className="text-xs text-slate-500 mt-1">Join ScholarMate and unlock opportunities</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Create Student Account</h1>
+          <p className="text-xs text-slate-500 mt-1">Unlock verified scholarships tailored for your education</p>
         </div>
 
         {/* Form Card */}
@@ -87,60 +114,64 @@ export default function Register() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name & Mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={update("name")}
+                  placeholder="e.g. Aditya Hajare"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number *</label>
+                <input
+                  type="tel"
+                  required
+                  value={form.mobile}
+                  onChange={update("mobile")}
+                  placeholder="e.g. 9876543210"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                />
+              </div>
+            </div>
+
+            {/* Email Address */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
               <input
-                type="text"
+                type="email"
                 required
-                value={form.name}
-                onChange={update("name")}
-                placeholder="Enter your full name"
+                value={form.email}
+                onChange={update("email")}
+                placeholder="aditya@example.com"
                 className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
               />
             </div>
 
+            {/* Passwords with Show/Hide */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={update("email")}
-                  placeholder="Enter your email"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number</label>
-                <input
-                  type="tel"
-                  value={form.mobile}
-                  onChange={update("mobile")}
-                  placeholder="Enter your mobile number"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Password *</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     value={form.password}
                     onChange={update("password")}
-                    placeholder="Create a password"
+                    placeholder="Min. 6 characters"
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 pr-9"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
@@ -148,65 +179,150 @@ export default function Register() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Confirm Password</label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={form.confirmPassword}
-                  onChange={update("confirmPassword")}
-                  placeholder="Confirm your password"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                />
+                <label className="block text-xs font-bold text-slate-700 mb-1">Confirm Password *</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    value={form.confirmPassword}
+                    onChange={update("confirmPassword")}
+                    placeholder="Re-enter password"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 pr-9"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
             </div>
 
+            {/* Education Type & Level */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Profile Type</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Education Type *</label>
                 <select
-                  value={form.profileType}
-                  onChange={update("profileType")}
+                  value={form.educationType}
+                  onChange={update("educationType")}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-700"
                 >
-                  <option value="">Select profile type</option>
-                  <option value="Student">Student</option>
-                  <option value="Working professional">Working Professional</option>
-                  <option value="Job seeker">Job Seeker</option>
-                  <option value="Other">Other</option>
+                  <option value="HIGHER_SECONDARY">Higher Secondary (11th/12th)</option>
+                  <option value="DIPLOMA">Diploma / Polytechnic</option>
+                  <option value="UNDERGRADUATE">Undergraduate (B.Tech, BSc, BA, etc.)</option>
+                  <option value="POSTGRADUATE">Postgraduate (Masters, MBA, etc.)</option>
+                  <option value="PHD">PhD / Doctoral Research</option>
+                  <option value="VOCATIONAL">Vocational Training</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Education Level</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Education Level / Year *</label>
                 <select
                   value={form.educationLevel}
                   onChange={update("educationLevel")}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-700"
                 >
-                  <option value="">Select education level</option>
-                  <option value="SCHOOL">School (10th/12th)</option>
-                  <option value="DIPLOMA">Diploma / Polytechnic</option>
-                  <option value="UG">Undergraduate (B.Tech/BSc/BCom)</option>
-                  <option value="PG">Postgraduate (Masters/MBA)</option>
-                  <option value="PHD_RESEARCH">PhD / Research</option>
-                  <option value="VOCATIONAL">Vocational / Skill Dev</option>
+                  <option value="11th Standard">11th Standard</option>
+                  <option value="12th Standard">12th Standard</option>
+                  <option value="First Year (UG)">First Year (UG / Diploma)</option>
+                  <option value="Second Year (UG)">Second Year (UG / Diploma)</option>
+                  <option value="Third Year (UG)">Third Year (UG / Diploma)</option>
+                  <option value="Final Year (UG)">Final Year (UG)</option>
+                  <option value="First Year (PG)">First Year (PG)</option>
+                  <option value="Final Year (PG)">Final Year (PG)</option>
+                  <option value="Doctoral Candidate">Doctoral Candidate</option>
                 </select>
               </div>
             </div>
 
-            <div className="pt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
+            {/* Course & State */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Course / Stream *</label>
+                <input
+                  type="text"
+                  required
+                  value={form.course}
+                  onChange={update("course")}
+                  placeholder="e.g. Computer Science, Commerce"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Domicile State *</label>
+                <select
+                  value={form.state}
+                  onChange={update("state")}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-700"
+                >
+                  {indianStates.map((st) => (
+                    <option key={st} value={st}>{st}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Guardian Mode Checkbox for Under 18 */}
+            <div className="pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                <input
+                  type="checkbox"
+                  checked={form.isUnder18}
+                  onChange={update("isUnder18")}
+                  className="w-4 h-4 rounded text-[#544af4] border-slate-300 focus:ring-indigo-500"
+                />
+                <span className="font-semibold text-slate-800">
+                  Student is under 18 years old (Requires Guardian Consent)
+                </span>
+              </label>
+            </div>
+
+            {/* Conditional Guardian Fields */}
+            {form.isUnder18 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                <div>
+                  <label className="block text-xs font-bold text-indigo-900 mb-1">Guardian / Parent Name *</label>
+                  <input
+                    type="text"
+                    required={form.isUnder18}
+                    value={form.guardianName}
+                    onChange={update("guardianName")}
+                    placeholder="Parent or Guardian name"
+                    className="w-full rounded-xl border border-indigo-200 bg-white px-3.5 py-2 text-xs outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-indigo-900 mb-1">Guardian Mobile Number *</label>
+                  <input
+                    type="tel"
+                    required={form.isUnder18}
+                    value={form.guardianPhone}
+                    onChange={update("guardianPhone")}
+                    placeholder="Parent or Guardian phone"
+                    className="w-full rounded-xl border border-indigo-200 bg-white px-3.5 py-2 text-xs outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Terms and Consent Checkbox */}
+            <div className="pt-1">
+              <label className="flex items-start gap-2 cursor-pointer text-xs text-slate-600">
                 <input
                   type="checkbox"
                   checked={form.termsAgreed}
-                  onChange={(e) => setForm({ ...form, termsAgreed: e.target.checked })}
-                  className="w-4 h-4 rounded text-[#544af4] border-slate-300 focus:ring-indigo-500"
+                  onChange={update("termsAgreed")}
+                  className="w-4 h-4 rounded text-[#544af4] border-slate-300 focus:ring-indigo-500 mt-0.5"
                 />
                 <span>
                   I agree to the{" "}
-                  <a href="#" className="text-[#544af4] font-semibold hover:underline">
-                    Terms & Conditions
-                  </a>
+                  <span className="text-[#544af4] font-semibold">Terms & Conditions</span>,{" "}
+                  <span className="text-[#544af4] font-semibold">DPDP Consent</span>, and{" "}
+                  <span className="text-[#544af4] font-semibold">Privacy Policy</span>.
                 </span>
               </label>
             </div>
@@ -214,9 +330,9 @@ export default function Register() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-3 py-3 px-4 rounded-xl bg-[#544af4] hover:bg-[#4438e8] text-white font-bold text-sm shadow-md shadow-indigo-600/25 transition disabled:opacity-50 cursor-pointer"
+              className="w-full mt-2 py-3 px-4 rounded-xl bg-[#544af4] hover:bg-[#4438e8] text-white font-bold text-sm shadow-md shadow-indigo-600/25 transition disabled:opacity-50 cursor-pointer"
             >
-              {submitting ? "Creating Account..." : "Create Account"}
+              {submitting ? "Creating Verified Account..." : "Create Account"}
             </button>
           </form>
 

@@ -21,13 +21,12 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  const login = (userData, password) => {
+  const login = (userData) => {
     if (userData?.token) {
       localStorage.setItem("scholarmate_token", userData.token);
     }
-    if (password && userData?.email) {
-      const credentials = btoa(`${userData.email}:${password}`);
-      localStorage.setItem("scholarmate_credentials", credentials);
+    if (userData?.refreshToken) {
+      localStorage.setItem("scholarmate_refresh_token", userData.refreshToken);
     }
     setUser(userData);
   };
@@ -35,7 +34,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("scholarmate_token");
-    localStorage.removeItem("scholarmate_credentials");
+    localStorage.removeItem("scholarmate_refresh_token");
     localStorage.removeItem("scholarmate_user");
   };
 

@@ -4,9 +4,6 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  CheckCircle2,
-  Users,
-  Search,
   BookOpen,
   Award,
 } from "lucide-react";

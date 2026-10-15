@@ -5,16 +5,14 @@ import {
   CheckCircle2,
   AlertCircle,
   Eye,
-  Trash2,
   Sparkles,
 } from "lucide-react";
 import Card from "../../components/common/Card";
-import { profileChildApi, documentReviewApi } from "../../lib/api";
+import { documentReviewApi } from "../../lib/api";
 
 export default function Documents() {
   const fileInputRef = useRef(null);
   const [activeDocType, setActiveDocType] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [ocrResult, setOcrResult] = useState(null);
 
   const [documents, setDocuments] = useState([
@@ -76,7 +74,6 @@ export default function Documents() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
     try {
       // Run OCR & document review
       const res = await documentReviewApi.reviewFile(file);
@@ -90,7 +87,7 @@ export default function Documents() {
             : doc
         )
       );
-    } catch (err) {
+    } catch {
       // Fallback local update if backend OCR service has offline Tess4J
       setDocuments((prev) =>
         prev.map((doc) =>
@@ -100,7 +97,6 @@ export default function Documents() {
         )
       );
     } finally {
-      setUploading(false);
       e.target.value = "";
     }
   };

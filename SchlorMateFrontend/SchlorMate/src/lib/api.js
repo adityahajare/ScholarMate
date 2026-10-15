@@ -15,18 +15,44 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem("scholarmate_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    const credentials = localStorage.getItem("scholarmate_credentials");
-    if (credentials) {
-      config.headers.Authorization = `Basic ${credentials}`;
-    }
   }
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config;
+    const refreshToken = localStorage.getItem("scholarmate_refresh_token");
+    const isAuthRequest = original?.url?.includes("/auth/");
+
+    if (error.response?.status !== 401 || !refreshToken || isAuthRequest || original?._retry) {
+      return Promise.reject(error);
+    }
+
+    original._retry = true;
+    try {
+      const { data } = await api.post("/auth/refresh", { refreshToken });
+      localStorage.setItem("scholarmate_token", data.token);
+      if (data.refreshToken) {
+        localStorage.setItem("scholarmate_refresh_token", data.refreshToken);
+      }
+      original.headers.Authorization = `Bearer ${data.token}`;
+      return api(original);
+    } catch (refreshError) {
+      localStorage.removeItem("scholarmate_token");
+      localStorage.removeItem("scholarmate_refresh_token");
+      localStorage.removeItem("scholarmate_user");
+      return Promise.reject(refreshError);
+    }
+  }
+);
+
 export const authApi = {
   login: (email, password) => api.post("/auth/login", { email, password }),
   register: (payload) => api.post("/auth/register", payload),
+  forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
+  resetPassword: (token, newPassword) => api.post("/auth/reset-password", { token, newPassword }),
 };
 
 export const scholarshipApi = {

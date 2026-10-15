@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   GraduationCap,
-  Sparkles,
   Bookmark,
   Calendar,
-  ArrowRight,
   Clock,
   Building2,
   ChevronRight,
@@ -19,7 +17,6 @@ import { useAuth } from "../../context/AuthContext";
 
 function Dashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [scholarships, setScholarships] = useState([]);

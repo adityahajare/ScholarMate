@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -26,9 +26,10 @@ import ProfileBuilderLayout from "./pages/profile/ProfileBuilderLayout";
 import PersonalInfoForm from "./pages/profile/steps/PersonalInfoForm";
 import ReviewSubmit from "./pages/profile/steps/ReviewSubmit";
 
-
 import LandingPage from "./pages/LandingPage";
 import Documents from "./pages/student/Documents";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 function App() {
   return (
@@ -40,6 +41,8 @@ function App() {
         {/* Authentication */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding/verify" element={<ProtectedRoute><OnboardingVerification /></ProtectedRoute>} />
 
         {/* User Application */}
@@ -55,8 +58,8 @@ function App() {
         />
 
         {/* Profile Builder & Profile Routes */}
-        <Route path="/profile/education" element={<EducationTypeSelector />} />
-        <Route path="/profile/builder" element={<ProfileBuilderLayout />}>
+        <Route path="/profile/education" element={<ProtectedRoute><EducationTypeSelector /></ProtectedRoute>} />
+        <Route path="/profile/builder" element={<ProtectedRoute><ProfileBuilderLayout /></ProtectedRoute>}>
           <Route index element={<PersonalInfoForm />} />
           <Route path="review" element={<ReviewSubmit />} />
         </Route>
