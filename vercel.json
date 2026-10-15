@@ -1,5 +1,11 @@
 {
   "buildCommand": "cd SchlorMate/SchlorMate && npm ci && npm run build",
   "outputDirectory": "SchlorMate/SchlorMate/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://scholarmate-backend1.onrender.com/api/:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
