@@ -1,14 +1,25 @@
 import axios from "axios";
 
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const apiBaseUrl = configuredApiUrl
+  ? `${configuredApiUrl.replace(/\/+$/, "")}${configuredApiUrl.replace(/\/+$/, "").endsWith("/api") ? "" : "/api"}`
+  : "/api";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: apiBaseUrl,
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
 
 api.interceptors.request.use((config) => {
-  const credentials = localStorage.getItem("scholarmate_credentials");
-  if (credentials) {
-    config.headers.Authorization = `Basic ${credentials}`;
+  const token = localStorage.getItem("scholarmate_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    const credentials = localStorage.getItem("scholarmate_credentials");
+    if (credentials) {
+      config.headers.Authorization = `Basic ${credentials}`;
+    }
   }
   return config;
 });
