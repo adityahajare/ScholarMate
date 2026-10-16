@@ -1,7 +1,7 @@
 services:
   - type: web
     runtime: docker
-    name: scholarmate-ml-service
+    name: scholarmate-ml
     rootDir: scolarmate-backend/ml-service
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
