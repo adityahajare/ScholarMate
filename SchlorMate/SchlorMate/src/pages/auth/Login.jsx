@@ -1,200 +1,60 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  GraduationCap,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Sparkles,
-  ShieldCheck,
-  CheckCircle2,
-  ArrowRight,
-} from "lucide-react";
+import { ArrowRight, Check, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, Phone, Search, Sparkles } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import Button from "../../components/common/Button";
-import Card from "../../components/common/Card";
 import { loginUser } from "../../services/api";
 
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsSubmitting(true);
-
-    try {
-      const response = await loginUser(email, password);
-      login(response);
-      navigate("/dashboard");
-    } catch (requestError) {
-      setError(requestError.message || "Unable to sign in.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = async (event) => {
+    event.preventDefault(); setError(""); setIsSubmitting(true);
+    try { const response = await loginUser(email, password); login(response); navigate("/dashboard"); }
+    catch (requestError) { setError(requestError.message || "Unable to sign in."); }
+    finally { setIsSubmitting(false); }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fadeIn">
-      <div className="max-w-4xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Left Side: Brand Story & Trust Props (Hidden on mobile or compact) */}
-        <div className="lg:col-span-6 space-y-6 text-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-500 flex items-center justify-center text-white shadow-sm">
-              <GraduationCap className="w-7 h-7" />
-            </div>
-            <div>
-              <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                Scholar<span className="text-blue-600">Mate</span>
-              </span>
-              <p className="text-xs font-semibold text-slate-500">
-                AI Student Opportunity Platform
-              </p>
-            </div>
+    <main className="auth-shell login-shell">
+      <div className="auth-orb auth-orb-one" /><div className="auth-orb auth-orb-two" />
+      <header className="auth-nav">
+        <Link to="/" className="brand-mark" aria-label="ScholarMate home"><span className="brand-icon"><GraduationCap size={22} /></span><span>Scholar<span>Mate</span></span></Link>
+        <nav className="auth-links" aria-label="Main navigation"><a href="#home">Home</a><a href="#features">Features</a><a href="#scholarships">Scholarships</a><a href="#institutions">For Institutions</a><a href="#about">About</a></nav>
+        <div className="auth-nav-actions"><button className="search-button" type="button" aria-label="Search"><Search size={19} /></button><span className="signin-copy">Don't have an account?</span><Link to="/register" className="filled-button">Sign Up</Link></div>
+      </header>
+      <section className="auth-content login-content" id="home">
+        <div className="story-panel login-story">
+          <div className="eyebrow"><span>Welcome back</span><span className="eyebrow-spark">✦</span></div>
+          <h1>Welcome<br /><em>Back!</em></h1>
+          <p className="story-copy">Continue your journey towards a brighter future with ScholarMate.</p>
+          <div className="benefit-list" id="features">
+            <div className="benefit-item"><span className="benefit-icon teal"><GraduationCap size={20} /></span><span><strong>Find new</strong><small>opportunities</small></span></div>
+            <div className="benefit-item"><span className="benefit-icon orange"><Sparkles size={20} /></span><span><strong>Track your</strong><small>applications</small></span></div>
+            <div className="benefit-item"><span className="benefit-icon gold">☆</span><span><strong>Get AI-powered</strong><small>guidance</small></span></div>
           </div>
-
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Discover scholarships made for your educational journey.
-            </h1>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Match your academic marks, family income, and career branch against hundreds of government and private foundation scholarships with zero guesswork.
-            </p>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-slate-700">
-              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              </div>
-              <span>100% Free scholarship matching for college students</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-slate-700">
-              <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                <Sparkles className="w-3.5 h-3.5" />
-              </div>
-              <span>Empirical AI success chance and eligibility modeling</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-slate-700">
-              <div className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </div>
-              <span>Verified schemes directly from state & national portals</span>
-            </div>
-          </div>
+          <div className="dream-note login-note"><span>Same Dreams<br />Brighter Futures</span><b>↗</b></div>
+          <div className="illustration login-illustration" aria-hidden="true"><div className="sun-disc" /><img className="real-hero-image" style={{ width: "76%", height: "84%", objectFit: "cover", objectPosition: "center top", position: "absolute", left: "13%", bottom: "-5%", borderRadius: "46% 46% 7% 7%", transform: "rotate(3deg)", zIndex: 2, boxShadow: "0 18px 30px rgba(36, 71, 54, .22)" }} src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=85" alt="Students walking across campus" /><div className="polaroid polaroid-one"><span>More Opportunities<br />Brighter Tomorrows</span><b>✦</b></div><div className="paper-plane">➤</div></div>
         </div>
-
-        {/* Right Side: Login Card */}
-        <div className="lg:col-span-6">
-          <Card className="p-8 sm:p-10 shadow-lg border-slate-200/90" hover={false}>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Welcome back 👋
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Enter your credentials to access your scholarship dashboard.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
-                  {error}
-                </div>
-              )}
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@example.com"
-                    required
-                    className="w-full bg-slate-50/50 border border-slate-200/90 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => alert("Password reset instructions will be sent to your email.")}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="w-full bg-slate-50/50 border border-slate-200/90 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit */}
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  size="lg"
-                  className="w-full"
-                  icon={ArrowRight}
-                >
-                  {isSubmitting ? "Signing in..." : "Sign In to Dashboard"}
-                </Button>
-              </div>
-            </form>
-
-            {/* Switch to Register */}
-            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <p className="text-xs sm:text-sm text-slate-500">
-                New to ScholarMate?{" "}
-                <Link
-                  to="/register"
-                  className="font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  Create Student Account
-                </Link>
-              </p>
-            </div>
-          </Card>
-        </div>
-      </div>
-    </div>
+        <div className="register-card-wrap"><div className="register-card login-card"><div className="card-decoration">✦</div><div className="card-cap"><GraduationCap size={34} /></div><div className="card-heading"><h2>Sign In to <span>ScholarMate</span></h2><p>Access your dashboard and continue exploring scholarships, applications and more.</p></div>
+          {error && <div className="form-error" role="alert">{error}</div>}
+          <form onSubmit={handleSubmit} className="signup-form login-form">
+            <label>Email Address<div className="input-wrap"><Mail size={17} /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="yourname@example.com" required /></div></label>
+            <label><span className="label-row">Password <Link to="/forgot-password">Forgot password?</Link></span><div className="input-wrap"><LockKeyhole size={17} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" required /><button type="button" className="password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>
+            <label className="consent remember"><button type="button" className={`check-box ${remember ? "checked" : ""}`} onClick={() => setRemember((value) => !value)} aria-label="Remember me">{remember && <Check size={13} strokeWidth={3} />}</button><span>Remember me</span></label>
+            <button className="primary-submit" type="submit" disabled={isSubmitting}>{isSubmitting ? "Signing in..." : "Sign In"}<ArrowRight size={19} /></button>
+          </form>
+          <div className="social-divider"><span>or continue with</span></div><div className="social-buttons"><button type="button"><b className="google-g">G</b>Google</button><button type="button"><b className="microsoft-grid">⊞</b>Microsoft</button><button type="button"><Phone size={16} />Phone</button></div>
+          <p className="card-footer-copy">Don't have an account? <Link to="/register">Sign Up <ArrowRight size={13} /></Link></p>
+        </div></div>
+      </section>
+    </main>
   );
 }
-
 export default Login;

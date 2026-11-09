@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 
-public interface ScholarshipRepository extends JpaRepository<Scholarship,Long> {
+public interface ScholarshipRepository extends JpaRepository<Scholarship, Long> {
     Optional<Scholarship> findByName(String name);
 
     List<Scholarship> findByActiveTrue();
@@ -33,12 +33,23 @@ public interface ScholarshipRepository extends JpaRepository<Scholarship,Long> {
             "order by scholarship.active desc, scholarship.id asc")
     List<Scholarship> findByNormalizedName(@Param("name") String name);
 
-        @Query("select scholarship from Scholarship scholarship " +
+    @Query("select scholarship from Scholarship scholarship " +
             "where lower(trim(scholarship.name)) = lower(trim(:name)) " +
             "and scholarship.source.id = :sourceId " +
             "order by scholarship.active desc, scholarship.id asc")
-        List<Scholarship> findByNormalizedNameAndSourceId(
+    List<Scholarship> findByNormalizedNameAndSourceId(
             @Param("name") String name,
             @Param("sourceId") Long sourceId);
 
+    @Query(value = "SELECT s.* FROM scholarships s " +
+            "WHERE s.active = true " +
+            "AND (similarity(s.name, :query) >= :minSim OR similarity(COALESCE(s.description, ''), :query) >= :minSim) " +
+            "ORDER BY GREATEST(similarity(s.name, :query), similarity(COALESCE(s.description, ''), :query)) DESC, s.id DESC",
+            countQuery = "SELECT COUNT(*) FROM scholarships s " +
+            "WHERE s.active = true " +
+            "AND (similarity(s.name, :query) >= :minSim OR similarity(COALESCE(s.description, ''), :query) >= :minSim)",
+            nativeQuery = true)
+    Page<Scholarship> searchFuzzyTrigram(@Param("query") String query, @Param("minSim") double minSim, Pageable pageable);
+
+    List<Scholarship> findByIdInAndActiveTrue(List<Long> ids);
 }

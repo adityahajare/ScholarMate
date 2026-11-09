@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 from app.feature_schema import EducationStage, FeatureValue, to_camel
 
@@ -110,3 +111,90 @@ class PipelineDiagnostics(ApiModel):
 class RecommendationResponse(ApiModel):
     recommendations: list[RecommendedScholarship]
     pipeline: PipelineDiagnostics
+
+
+class AdaptiveQuestionRankingRequest(ApiModel):
+    student_id: str | None = None
+    candidate_scholarship_ids: list[str] = Field(default_factory=list)
+    known_field_keys: list[str] = Field(default_factory=list)
+    missing_field_keys: list[str] = Field(default_factory=list)
+    already_asked_field_keys: list[str] = Field(default_factory=list)
+    scholarship_requirement_field_map: dict[str, list[str]] = Field(default_factory=dict)
+    scholarship_names: dict[str, str] = Field(default_factory=dict)
+
+
+class RankedQuestion(ApiModel):
+    field_key: str
+    priority_score: float
+    reason: str
+    target_scholarship_count: int = 0
+
+
+class AdaptiveQuestionRankingResponse(ApiModel):
+    ranked_questions: list[RankedQuestion]
+
+
+class SemanticScholarshipDoc(ApiModel):
+    id: int
+    name: str | None = None
+    description: str | None = None
+    provider: str | None = None
+    category: str | None = None
+
+
+class SemanticSearchRequest(ApiModel):
+    query: str
+    documents: list[SemanticScholarshipDoc] = Field(default_factory=list)
+    top_k: int = 20
+
+
+class SemanticSearchResult(ApiModel):
+    scholarship_id: int
+    score: float
+
+
+class SemanticSearchResponse(ApiModel):
+    results: list[SemanticSearchResult]
+    query: str
+    model: str
+
+
+class FeedbackEventRequest(ApiModel):
+    student_id: int
+    scholarship_id: int
+    event_type: str
+    features: dict[str, Any] = Field(default_factory=dict)
+    event_timestamp: str | None = None
+
+
+class FeedbackEventResponse(ApiModel):
+    status: str
+    event_type: str | None = None
+    samples_seen: int = 0
+    online_auc: float = 0.5
+    model_version: str = "river-online-v1"
+    message: str | None = None
+
+
+class BatchFeedbackRequest(ApiModel):
+    events: list[FeedbackEventRequest] = Field(default_factory=list)
+
+
+class OnlineScoringCandidate(ApiModel):
+    scholarship_id: int
+    features: dict[str, Any] = Field(default_factory=dict)
+
+
+class OnlineScoringRequest(ApiModel):
+    student_id: int
+    candidates: list[OnlineScoringCandidate] = Field(default_factory=list)
+
+
+class OnlineScoringResult(ApiModel):
+    scholarship_id: int
+    online_score: float
+
+
+class OnlineScoringResponse(ApiModel):
+    scores: list[OnlineScoringResult]
+    model_version: str

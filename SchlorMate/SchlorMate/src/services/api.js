@@ -27,6 +27,33 @@ async function fetchWithRetry(url, options, attempts = 3) {
   throw lastError || new Error("Backend is unavailable.");
 }
 
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem("scholarmate_refresh_token");
+
+  if (!refreshToken) return null;
+
+  const response = await fetchWithRetry(`${API_BASE_URL}/api/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  }, 2);
+
+  if (!response.ok) {
+    localStorage.removeItem("scholarmate_access_token");
+    localStorage.removeItem("scholarmate_refresh_token");
+    return null;
+  }
+
+  const body = await response.json();
+  localStorage.setItem("scholarmate_access_token", body.token);
+
+  if (body.refreshToken) {
+    localStorage.setItem("scholarmate_refresh_token", body.refreshToken);
+  }
+
+  return body.token;
+}
+
 async function request(path, options = {}) {
   const token = localStorage.getItem("scholarmate_access_token");
   const headers = new Headers(options.headers || {});
@@ -36,10 +63,22 @@ async function request(path, options = {}) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetchWithRetry(`${API_BASE_URL}${path}`, {
+  let response = await fetchWithRetry(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
   });
+
+  if (response.status === 401 && !path.startsWith("/api/auth/")) {
+    const refreshedToken = await refreshAccessToken();
+
+    if (refreshedToken) {
+      headers.set("Authorization", `Bearer ${refreshedToken}`);
+      response = await fetchWithRetry(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers,
+      });
+    }
+  }
 
   const body = await response.json().catch(() => null);
 

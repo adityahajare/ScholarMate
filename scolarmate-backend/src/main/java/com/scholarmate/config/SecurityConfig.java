@@ -56,12 +56,19 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/agent/**").authenticated()
+                        .requestMatchers("/api/v1/scholarship-discovery/**").authenticated()
+                        .requestMatchers("/api/v1/recommendations/feedback/**").authenticated()
+                        .requestMatchers("/api/v1/form/**").permitAll()
+                        .requestMatchers("/api/notifications/**").authenticated()
                         .requestMatchers("/api/profile-documents/**").authenticated()
                         .requestMatchers("/api/profile/**").authenticated()
                         .requestMatchers("/api/profiles/**").authenticated()
                         .requestMatchers("/api/eligibility/**").authenticated()
                         .requestMatchers("/api/scholarships/**").permitAll()
+                        .requestMatchers("/api/v1/scholarships/**").permitAll()
                         .requestMatchers("/api/ml/**").authenticated()
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/scraper/**").hasRole("ADMIN")
                         .anyRequest().permitAll()
 
@@ -85,7 +92,7 @@ public class SecurityConfig {
                 .filter(origin -> !origin.isBlank())
                 .forEach(allowedOrigins::add);
         configuration.setAllowedOrigins(allowedOrigins.stream().distinct().toList());
-        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 
